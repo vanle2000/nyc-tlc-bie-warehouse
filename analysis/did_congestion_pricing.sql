@@ -10,7 +10,7 @@
 -- pre-existing per-trip `congestion_surcharge` fare field, so we measure
 -- how trips CHANGED, not a fare line item. See BUSINESS_QUESTIONS.md.
 --
--- analysis/analysis.ipynb runs the equivalent regression with robust standard
+-- analysis/congestion_pricing_impact.ipynb runs the equivalent regression with robust standard
 -- errors so the estimate comes with uncertainty, not just a point value.
 -- =====================================================================
 
