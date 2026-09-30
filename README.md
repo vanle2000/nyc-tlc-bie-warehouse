@@ -1,4 +1,4 @@
-# NYC Taxi Warehouse & Congestion-Pricing Impact Analysis
+# NYC Taxi Warehouse & Congestion Pricing Impact Analysis
 
 An end-to-end business intelligence pipeline on NYC Taxi & Limousine Commission (TLC)
 trip data: raw Parquet in S3, profiled and modeled with Amazon Athena into a star
@@ -11,9 +11,9 @@ policy.
 
 ---
 
-## The business framing
+## The business scenario
 
-A transportation-operations stakeholder wants a single, trusted place to answer
+A transportation operations stakeholder wants a single, trusted place to answer
 recurring questions about taxi demand, revenue, and driver efficiency, and one
 strategic question: **did the January 2025 congestion-pricing toll change taxi
 behavior in the tolled zone?**
@@ -28,9 +28,7 @@ The requirements I gathered:
    the dashboard.
 4. **A decision on the policy shock** — a defensible estimate of the congestion-pricing
    effect, not just a before/after chart.
-
-This repo delivers all four.
-
+   
 ---
 
 ## Architecture
@@ -71,18 +69,14 @@ This repo delivers all four.
                  └────────────────────────────────────────────────────────────┘
 ```
 
-Steps **5** (quality gate) and **6** (distribution/sort-key choices) are what make
-this a warehouse an operations team can trust, rather than a one-off load. Step **8**
-turns the warehouse into a decision.
-
 ---
 
 ## Repository layout
 
 ```
 nyc-tlc-bie-warehouse/
-├── README.md                     # this file — doubles as the walkthrough script
-├── BUSINESS_QUESTIONS.md         # questions answered + recommendations + limitations
+├── README.md                    
+├── BUSINESS_QUESTIONS.md          
 ├── requirements.txt
 ├── config.example.yaml           # bucket, region, workgroup, Redshift settings
 ├── sql/
@@ -92,8 +86,8 @@ nyc-tlc-bie-warehouse/
 │   ├── 03_ctas_fact_trips.sql        # fact table via CTAS (joins + dedup + derived)
 │   └── 04_cbd_zone_reference.sql     # derive the ≤60th-St treated-zone set from lookup
 ├── dq/
-│   ├── dq_checks.sql                 # all quality-gate assertions (one query each)
-│   └── README.md                     # what each check protects against
+│   ├── dq_checks.sql                 # all quality-gate assertions
+│   └── README.md                     
 ├── redshift/
 │   ├── 01_ddl.sql                    # tables with DISTKEY / SORTKEY + justification
 │   └── 02_copy.sql                   # COPY from S3 curated Parquet
@@ -102,7 +96,7 @@ nyc-tlc-bie-warehouse/
 │   ├── parallel_trends.sql           # pre-period trend by month (assumption check)
 │   ├── placebo_test.sql              # fake cutoff falsification test
 │   ├── zone_hour_segmentation.sql    # revenue-per-hour efficiency segments
-│   └── analysis.ipynb                # runs the SQL above + DiD regression + charts + findings
+│   └── congestion_pricing_impact.ipynb              # runs the SQL above + DiD regression + charts + findings
 └── orchestration/
     └── run_pipeline.ipynb            # boto3: ingest → CTAS → DQ → COPY
 ```
@@ -153,33 +147,6 @@ The notebook: downloads the TLC files → uploads to `s3://<bucket>/raw/` → cr
 Athena external tables → runs the CTAS ETL → runs the DQ gate (**stops if any check
 fails**) → issues the Redshift `COPY`. QuickSight is then pointed at Redshift (steps
 in `redshift/README` and the notebook's final cell).
-
-### Cost & teardown (do this — it prevents a surprise bill)
-
-| Service | Cost control |
-|---|---|
-| S3 | Pennies for this data; delete the bucket when done. |
-| Athena | Bills on bytes scanned — query partitioned Parquet, avoid `SELECT *`. |
-| Redshift Serverless | Free-trial credit; **pause or delete the workgroup after screenshots.** |
-| QuickSight | 30-day Author trial, then ~$24/mo; **cancel the subscription after capturing the dashboard.** |
-
-A teardown checklist is in the final notebook cell.
+```
 
 ---
-
-## What this project demonstrates
-
-| Capability | Where |
-|---|---|
-| SQL depth (windows, CTEs, anti-joins) | `sql/`, `dq/`, `analysis/` |
-| Dimensional / star-schema data modeling | `sql/01_star_schema_design.md`, `sql/02`, `sql/03` |
-| ETL on large, multi-file data | `sql/` CTAS + `orchestration/` |
-| Data warehousing on Redshift + query optimization | `redshift/01_ddl.sql` (distkey/sortkey) |
-| Data integrity / accuracy / reliability | `dq/` |
-| Metrics, reporting, self-serve BI | QuickSight dashboard + `BUSINESS_QUESTIONS.md` |
-| Analytical problem solving + business recommendation | `analysis/`, `BUSINESS_QUESTIONS.md` |
-
----
-
-*Data © NYC TLC, used under its public terms. This is an independent portfolio
-analysis and is not affiliated with the NYC TLC or the MTA.*
