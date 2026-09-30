@@ -1,0 +1,10 @@
+config.yaml
+*.parquet
+*.csv
+data/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+RESUME_*.md
