@@ -149,4 +149,3 @@ fails**) → issues the Redshift `COPY`. QuickSight is then pointed at Redshift 
 in `redshift/README` and the notebook's final cell).
 ```
 
----
